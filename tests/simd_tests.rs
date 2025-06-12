@@ -128,8 +128,8 @@ fn simd_add_autovectorized() {
     let proj = Project::from_bc_path("tests/bcfiles/simd.bc")
         .unwrap_or_else(|e| panic!("Failed to parse simd.bc module: {}", e));
 
-    let x_sum: u32 = (0 .. 16).sum();
-    let y_sum: u32 = (2 .. 18).sum();
+    let x_sum: u32 = (0..16).sum();
+    let y_sum: u32 = (2..18).sum();
     let z_sum: u32 = x_sum + y_sum;
     assert_eq!(
         get_possible_return_values_of_func(

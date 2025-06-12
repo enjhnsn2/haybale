@@ -383,7 +383,7 @@ impl Memory {
                 assert_eq!(bits % Self::BITS_IN_BYTE, 0);
                 let bytes = bits / Self::BITS_IN_BYTE;
                 assert!(bytes > 0);
-                (0 .. bytes)
+                (0..bytes)
                     .map(|byte_num| {
                         let offset_addr = addr.add(&BV::from_u64(
                             self.btor.clone(),
@@ -450,7 +450,7 @@ impl Memory {
                 // Not sure what the alignment of `addr` is, we'll just use the safe fallback
                 assert_eq!(write_size % Self::BITS_IN_BYTE, 0);
                 let write_size_bytes = write_size / Self::BITS_IN_BYTE;
-                for byte_num in 0 .. write_size_bytes {
+                for byte_num in 0..write_size_bytes {
                     let val_byte = val.slice(
                         (byte_num + 1) * Self::BITS_IN_BYTE - 1,
                         byte_num * Self::BITS_IN_BYTE,

@@ -126,7 +126,9 @@ pub fn symex_bswap<'p, B: Backend>(
         },
         #[cfg(feature = "llvm-11-or-greater")]
         Type::VectorType { scalable: true, .. } => {
-            return Err(Error::UnsupportedInstruction("bswap on a scalable vector".into()));
+            return Err(Error::UnsupportedInstruction(
+                "bswap on a scalable vector".into(),
+            ));
         },
         Type::VectorType {
             element_type,
@@ -744,14 +746,8 @@ mod tests {
         );
         let mut state = blank_state(&project, "test_func");
 
-        let four = constant_operand(Constant::Int {
-            bits: 8,
-            value: 4,
-        });
-        let sixty_four = constant_operand(Constant::Int {
-            bits: 8,
-            value: 64
-        });
+        let four = constant_operand(Constant::Int { bits: 8, value: 4 });
+        let sixty_four = constant_operand(Constant::Int { bits: 8, value: 64 });
         let one_hundred = constant_operand(Constant::Int {
             bits: 8,
             value: 100,

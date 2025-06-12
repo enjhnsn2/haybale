@@ -102,7 +102,7 @@ pub fn memset_bv<B: Backend>(
             }
             let mut addr = addr.clone();
             let mut bytes_written = state.zero(num_bytes.get_width());
-            for _ in 0 ..= max_num_bytes {
+            for _ in 0..=max_num_bytes {
                 let old_val = state.read(&addr, 8)?;
                 let should_write = num_bytes.ugt(&bytes_written);
                 state.write(&addr, should_write.cond_bv(&val, &old_val))?;
@@ -169,7 +169,7 @@ pub fn memcpy_bv<B: Backend>(
             let mut src_addr = src.clone();
             let mut dest_addr = dest.clone();
             let mut bytes_written = state.zero(num_bytes.get_width());
-            for _ in 0 ..= max_num_bytes {
+            for _ in 0..=max_num_bytes {
                 let src_val = state.read(&src_addr, 8)?;
                 let dst_val = state.read(&dest_addr, 8)?;
                 let should_write = num_bytes.ugt(&bytes_written);

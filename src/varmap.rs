@@ -315,14 +315,14 @@ mod tests {
         // Check that we can create 10 versions of the same `Name`
         let funcname = "foo".to_owned();
         let name = Name::from(7);
-        for _ in 0 .. 10 {
+        for _ in 0..10 {
             let bv = varmap.new_bv_with_name(funcname.clone(), name.clone(), 64);
             assert!(bv.is_ok());
         }
 
         // Check that we can create another 10 versions of that `Name` in a different function
         let funcname2 = "bar".to_owned();
-        for _ in 0 .. 10 {
+        for _ in 0..10 {
             let bv = varmap.new_bv_with_name(funcname2.clone(), name.clone(), 64);
             assert!(bv.is_ok());
         }

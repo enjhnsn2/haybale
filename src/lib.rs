@@ -141,7 +141,10 @@ pub fn find_zero_of_func<'p>(
             let width = project
                 .size_in_bits(&ty)
                 .expect("Function return type shouldn't be an opaque struct type");
-            assert_ne!(width, 0, "Function return type has width 0 bits but isn't void type"); // void type was handled above
+            assert_ne!(
+                width, 0,
+                "Function return type has width 0 bits but isn't void type"
+            ); // void type was handled above
             width
         },
     };

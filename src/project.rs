@@ -305,7 +305,10 @@ impl Project {
                     (Some((NamedStructDef::Opaque, _)), def @ NamedStructDef::Defined(_)) => {
                         retval = Some((def, module)) // found an actual definition, replace the previous opaque definition
                     },
-                    (Some((NamedStructDef::Defined(ty1), retmod)), NamedStructDef::Defined(ty2)) => {
+                    (
+                        Some((NamedStructDef::Defined(ty1), retmod)),
+                        NamedStructDef::Defined(ty2),
+                    ) => {
                         // duplicate non-opaque definitions: ensure they completely agree
                         if ty1 != ty2 {
                             // if they don't agree, we merely warn rather than panicking.
@@ -340,7 +343,9 @@ impl Project {
             Type::PointerType { .. } => Some(self.pointer_size_bits()),
             Type::FPType(fpt) => Some(Self::fp_size_in_bits(*fpt)),
             #[cfg(feature = "llvm-11-or-greater")]
-            Type::VectorType { scalable: true, .. } => panic!("size_in_bits: scalable vectors are not supported"),
+            Type::VectorType { scalable: true, .. } => {
+                panic!("size_in_bits: scalable vectors are not supported")
+            },
             Type::ArrayType {
                 element_type,
                 num_elements,
@@ -417,7 +422,10 @@ impl Project {
             .into_iter()
             .unzip();
         if modules.is_empty() {
-            panic!("No files found in {:?} with extension {:?}; or all were excluded", path, extn);
+            panic!(
+                "No files found in {:?} with extension {:?}; or all were excluded",
+                path, extn
+            );
         }
         let mut ptr_sizes = ptr_sizes.into_iter();
         let pointer_size_bits = ptr_sizes.next().expect("at least one path is required");

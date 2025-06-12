@@ -167,7 +167,7 @@ impl Memory {
             assert_eq!(bits % Self::BITS_IN_BYTE, 0, "Read with size {} bits", bits);
             let bytes = bits / Self::BITS_IN_BYTE;
             assert!(bytes > 0, "Read of length 0");
-            (0 .. bytes)
+            (0..bytes)
                 .map(|byte_num| {
                     let offset_addr = addr.add(&BV::from_u64(
                         self.btor.clone(),
@@ -214,7 +214,7 @@ impl Memory {
             write_size
         );
         let write_size_bytes = write_size / Self::BITS_IN_BYTE;
-        for byte_num in 0 .. write_size_bytes {
+        for byte_num in 0..write_size_bytes {
             let data_byte = write_data.slice(
                 (byte_num + 1) * Self::BITS_IN_BYTE - 1,
                 byte_num * Self::BITS_IN_BYTE,

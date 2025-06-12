@@ -45,7 +45,8 @@ fn atomicrmw() {
             ParameterVal::ExactValue(0xFF00),
             ParameterVal::Range(1, 3),
         ]),
-    ).unwrap();
+    )
+    .unwrap();
     let _ = em
         .next()
         .unwrap()
@@ -63,7 +64,15 @@ fn atomicrmw() {
     assert!(em.state().bvs_must_be_equal(var4, var1).unwrap());
     assert!(em.state().bvs_must_be_equal(var5, &var0.add(var1)).unwrap());
     assert!(em.state().bvs_must_be_equal(var6, var0).unwrap());
-    assert!(em.state().bvs_must_be_equal(var7, &em.state().zero(var7.get_width())).unwrap()); // given the values we provided for %0 and %1, %7 must always be 0
-    let sol8 = em.state().get_possible_solutions_for_bv(var8, 6).unwrap().as_u64_solutions().unwrap();
+    assert!(em
+        .state()
+        .bvs_must_be_equal(var7, &em.state().zero(var7.get_width()))
+        .unwrap()); // given the values we provided for %0 and %1, %7 must always be 0
+    let sol8 = em
+        .state()
+        .get_possible_solutions_for_bv(var8, 6)
+        .unwrap()
+        .as_u64_solutions()
+        .unwrap();
     assert_eq!(sol8, PossibleSolutions::exactly_one(3));
 }

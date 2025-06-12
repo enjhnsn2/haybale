@@ -1975,7 +1975,7 @@ where
         }
         locdescrs
             .into_iter()
-            .zip(1 ..)
+            .zip(1..)
             .map(|(locdescr, framenum)| {
                 let pretty_locdescr = if self.config.print_module_name {
                     locdescr.to_string_with_module()
@@ -2028,14 +2028,14 @@ where
                     if idx != 0 {
                         reenter_set.insert((path_entry.0.bb.name.clone(), idx - 1));
                     }
-                }
+                },
                 BBInstrIndex::Terminator => {
                     let num_instrs = path_entry.0.bb.instrs.len();
                     if num_instrs > 0 {
                         // call is last instruction in block
                         reenter_set.insert((path_entry.0.bb.name.clone(), num_instrs - 1));
                     }
-                }
+                },
             }
         }
         let mut path_str = String::new();
@@ -2053,23 +2053,22 @@ where
                                     broke_early = true;
                                     break;
                                 }
-                            }
-                            _ => {}
+                            },
+                            _ => {},
                         }
                     }
                     // add terminator, but only if we did not leave bb early bc of function call.
                     if !broke_early {
                         path_str.push_str(&format!("{}\n", location.bb.term));
                     }
-                }
+                },
                 BBInstrIndex::Terminator => {
                     path_str.push_str(&format!("{}\n", location.bb.term));
-                }
+                },
             }
         }
         path_str
     }
-
 
     /// returns a `String` containing a formatted view of the full path which led
     /// to this point, in terms of source locations
@@ -2289,7 +2288,7 @@ pub fn get_path_length<'p>(path: &Vec<PathEntry<'p>>) -> usize {
                 } else {
                     0
                 }
-            }
+            },
         };
         acc + entry_len
     })
