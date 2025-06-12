@@ -651,8 +651,10 @@ where
             },
             #[cfg(feature = "llvm-11-or-greater")]
             Type::VectorType { scalable: true, .. } => {
-                return Err(Error::UnsupportedInstruction("zext on a scalable vector".into()));
-            }
+                return Err(Error::UnsupportedInstruction(
+                    "zext on a scalable vector".into(),
+                ));
+            },
             Type::VectorType {
                 element_type,
                 num_elements,
@@ -668,8 +670,10 @@ where
                 let out_el_size = match self.state.type_of(zext).as_ref() {
                     #[cfg(feature = "llvm-11-or-greater")]
                     Type::VectorType { scalable: true, .. } => {
-                        return Err(Error::MalformedInstruction("ZExt result type is a scalable vector, but its operand is not".into()));
-                    }
+                        return Err(Error::MalformedInstruction(
+                            "ZExt result type is a scalable vector, but its operand is not".into(),
+                        ));
+                    },
                     Type::VectorType {
                         element_type: out_el_type,
                         num_elements: out_num_els,
@@ -719,8 +723,10 @@ where
             },
             #[cfg(feature = "llvm-11-or-greater")]
             Type::VectorType { scalable: true, .. } => {
-                return Err(Error::UnsupportedInstruction("sext on a scalable vector".into()));
-            }
+                return Err(Error::UnsupportedInstruction(
+                    "sext on a scalable vector".into(),
+                ));
+            },
             Type::VectorType {
                 element_type,
                 num_elements,
@@ -736,8 +742,10 @@ where
                 let out_el_size = match self.state.type_of(sext).as_ref() {
                     #[cfg(feature = "llvm-11-or-greater")]
                     Type::VectorType { scalable: true, .. } => {
-                        return Err(Error::MalformedInstruction("SExt result type is a scalable vector, but its operand is not".into()));
-                    }
+                        return Err(Error::MalformedInstruction(
+                            "SExt result type is a scalable vector, but its operand is not".into(),
+                        ));
+                    },
                     Type::VectorType {
                         element_type: out_el_type,
                         num_elements: out_num_els,
@@ -786,14 +794,18 @@ where
             },
             #[cfg(feature = "llvm-11-or-greater")]
             Type::VectorType { scalable: true, .. } => {
-                return Err(Error::UnsupportedInstruction("trunc on a scalable vector".into()));
-            }
+                return Err(Error::UnsupportedInstruction(
+                    "trunc on a scalable vector".into(),
+                ));
+            },
             Type::VectorType { num_elements, .. } => {
                 let in_vector = self.state.operand_to_bv(&trunc.operand)?;
                 let dest_el_size = match self.state.type_of(trunc).as_ref() {
                     #[cfg(feature = "llvm-11-or-greater")]
                     Type::VectorType { scalable: true, .. } => {
-                        return Err(Error::MalformedInstruction("Trunc result type is a scalable vector, but its operand is not".into()));
+                        return Err(Error::MalformedInstruction(
+                            "Trunc result type is a scalable vector, but its operand is not".into(),
+                        ));
                     },
                     Type::VectorType {
                         element_type: out_el_type,
@@ -948,7 +960,10 @@ where
         debug!("Symexing alloca {:?}", alloca);
         match &alloca.num_elements {
             Operand::ConstantOperand(cref) => match cref.as_ref() {
-                Constant::Int { value: num_elements, .. } => {
+                Constant::Int {
+                    value: num_elements,
+                    ..
+                } => {
                     let allocation_size_bits = {
                         let element_size_bits = self
                             .state
@@ -1029,49 +1044,51 @@ where
         let vector = self.state.operand_to_bv(&ie.vector)?;
         let element = self.state.operand_to_bv(&ie.element)?;
         match &ie.index {
-            Operand::ConstantOperand(cref) => match cref.as_ref() {
-                Constant::Int { value: index, .. } => {
-                    let index = *index as u32;
-                    match self.state.type_of(&ie.vector).as_ref() {
-                        Type::VectorType {
-                            element_type,
-                            num_elements,
-                            ..
-                        } => {
-                            if index >= *num_elements as u32 {
-                                Err(Error::MalformedInstruction(format!(
+            Operand::ConstantOperand(cref) => {
+                match cref.as_ref() {
+                    Constant::Int { value: index, .. } => {
+                        let index = *index as u32;
+                        match self.state.type_of(&ie.vector).as_ref() {
+                            Type::VectorType {
+                                element_type,
+                                num_elements,
+                                ..
+                            } => {
+                                if index >= *num_elements as u32 {
+                                    Err(Error::MalformedInstruction(format!(
                                     "InsertElement index out of range: index {} with {} elements", // or, (in LLVM 11+) trying to insert into a scalable vector, at an index which is not _guaranteed_ to exist
                                     index, num_elements
                                 )))
-                            } else {
-                                let vec_size = vector.get_width();
-                                let el_size = self.state.size_in_bits(&element_type)
+                                } else {
+                                    let vec_size = vector.get_width();
+                                    let el_size = self.state.size_in_bits(&element_type)
                                     .ok_or_else(|| Error::MalformedInstruction("InsertElement element is an opaque named struct type".into()))?;
-                                assert_eq!(vec_size, el_size * *num_elements as u32);
-                                let insertion_bitindex_low = index * el_size; // lowest bit number in the vector which will be overwritten
-                                let insertion_bitindex_high = (index + 1) * el_size - 1; // highest bit number in the vector which will be overwritten
+                                    assert_eq!(vec_size, el_size * *num_elements as u32);
+                                    let insertion_bitindex_low = index * el_size; // lowest bit number in the vector which will be overwritten
+                                    let insertion_bitindex_high = (index + 1) * el_size - 1; // highest bit number in the vector which will be overwritten
 
-                                let with_insertion = Self::overwrite_bv_segment(
-                                    &mut self.state,
-                                    &vector,
-                                    element,
-                                    insertion_bitindex_low,
-                                    insertion_bitindex_high,
-                                );
+                                    let with_insertion = Self::overwrite_bv_segment(
+                                        &mut self.state,
+                                        &vector,
+                                        element,
+                                        insertion_bitindex_low,
+                                        insertion_bitindex_high,
+                                    );
 
-                                self.state.record_bv_result(ie, with_insertion)
-                            }
-                        },
-                        ty => Err(Error::MalformedInstruction(format!(
-                            "Expected InsertElement vector to be a vector type, got {:?}",
-                            ty
-                        ))),
-                    }
-                },
-                c => Err(Error::UnsupportedInstruction(format!(
-                    "InsertElement with index not a constant int: {:?}",
-                    c
-                ))),
+                                    self.state.record_bv_result(ie, with_insertion)
+                                }
+                            },
+                            ty => Err(Error::MalformedInstruction(format!(
+                                "Expected InsertElement vector to be a vector type, got {:?}",
+                                ty
+                            ))),
+                        }
+                    },
+                    c => Err(Error::UnsupportedInstruction(format!(
+                        "InsertElement with index not a constant int: {:?}",
+                        c
+                    ))),
+                }
             },
             op => Err(Error::UnsupportedInstruction(format!(
                 "InsertElement with index not a constant int: {:?}",
@@ -1093,8 +1110,10 @@ where
         match op_type.as_ref() {
             #[cfg(feature = "llvm-11-or-greater")]
             Type::VectorType { scalable: true, .. } => {
-                return Err(Error::UnsupportedInstruction("shufflevector on scalable vectors".into()));
-            }
+                return Err(Error::UnsupportedInstruction(
+                    "shufflevector on scalable vectors".into(),
+                ));
+            },
             Type::VectorType {
                 element_type,
                 num_elements,
@@ -1358,7 +1377,10 @@ where
                                     "Call return type is an opaque struct type".into(),
                                 )
                             })?;
-                            assert_ne!(width, 0, "Function return type has size 0 bits but isn't void type"); // void type was handled above
+                            assert_ne!(
+                                width, 0,
+                                "Function return type has size 0 bits but isn't void type"
+                            ); // void type was handled above
                             let bv = self.state.new_bv_with_name(
                                 Name::from(format!("{}_retval", called_funcname)),
                                 width,
@@ -1366,6 +1388,23 @@ where
                             self.state
                                 .assign_bv_to_name(call.dest.as_ref().unwrap().clone(), bv)?;
                         },
+                    }
+                    Ok(None)
+                } else if self.state.config.function_hooks.has_uc_hook() {
+                    let hook = self.state.config.function_hooks.get_uc_hook().unwrap();
+                    let pretty_funcname = self.state.demangle(called_funcname);
+                    info!("Using UC hook for a function named {:?}", pretty_funcname);
+                    match self.symex_hook(call, &hook.clone(), &pretty_funcname, true)? {
+                        ReturnValue::Return(retval) => {
+                            self.state
+                                .assign_bv_to_name(call.dest.as_ref().unwrap().clone(), retval)?;
+                        },
+                        ReturnValue::ReturnVoid => {},
+                        ReturnValue::Throw(bvptr) => {
+                            debug!("UC Hook threw an exception, but caller isn't inside a try block; rethrowing upwards");
+                            return Ok(Some(ReturnValue::Throw(bvptr)));
+                        },
+                        ReturnValue::Abort => return Ok(Some(ReturnValue::Abort)),
                     }
                     Ok(None)
                 } else if let Some((callee, callee_mod)) =
@@ -1450,7 +1489,7 @@ where
                                 },
                             );
                             Ok(None)
-                        }
+                        },
                         Some(callsite) => panic!("Received unexpected callsite {:?}", callsite),
                     }
                 } else {
@@ -2009,7 +2048,10 @@ where
                                     "Invoke return type is an opaque struct type".into(),
                                 )
                             })?;
-                            assert_ne!(width, 0, "Invoke return type has size 0 bits but isn't void type"); // void type was handled above
+                            assert_ne!(
+                                width, 0,
+                                "Invoke return type has size 0 bits but isn't void type"
+                            ); // void type was handled above
                             let bv = self.state.new_bv_with_name(
                                 Name::from(format!("{}_retval", called_funcname)),
                                 width,
@@ -2106,7 +2148,7 @@ where
                                 self.state.cur_loc.bb.name,
                             );
                             self.symex_from_cur_loc_through_end_of_function()
-                        }
+                        },
                         Some(callsite) => panic!("Received unexpected callsite {:?}", callsite),
                     }
                 } else {
@@ -2348,7 +2390,9 @@ where
             },
             #[cfg(feature = "llvm-11-or-greater")]
             Type::VectorType { scalable: true, .. } => {
-                return Err(Error::UnsupportedInstruction("select on scalable vectors".into()));
+                return Err(Error::UnsupportedInstruction(
+                    "select on scalable vectors".into(),
+                ));
             },
             Type::VectorType {
                 element_type,
@@ -2375,7 +2419,7 @@ where
                 let condvec = self.state.operand_to_bv(&select.condition)?;
                 let truevec = self.state.operand_to_bv(&select.true_value)?;
                 let falsevec = self.state.operand_to_bv(&select.false_value)?;
-                let final_bv = (0 .. *num_elements as u32)
+                let final_bv = (0..*num_elements as u32)
                     .map(|idx| {
                         let bit = condvec.slice(idx, idx);
                         bit.cond_bv(
@@ -2494,7 +2538,7 @@ pub(crate) fn unary_on_vector<F: FnMut(&V) -> Result<V>, V: BV>(
     assert_eq!(in_vector_size % num_elements, 0);
     let in_el_size = in_vector_size / num_elements;
     let in_scalars =
-        (0 .. num_elements).map(|i| in_vector.slice((i + 1) * in_el_size - 1, i * in_el_size));
+        (0..num_elements).map(|i| in_vector.slice((i + 1) * in_el_size - 1, i * in_el_size));
     let out_scalars = in_scalars.map(|s| op(&s)).collect::<Result<Vec<_>>>()?;
     out_scalars
         .into_iter()
@@ -2525,9 +2569,9 @@ where
     assert_eq!(in_vector_size % num_elements, 0);
     let in_el_size = in_vector_size / num_elements;
     let in_scalars_0 =
-        (0 .. num_elements).map(|i| in_vector_0.slice((i + 1) * in_el_size - 1, i * in_el_size));
+        (0..num_elements).map(|i| in_vector_0.slice((i + 1) * in_el_size - 1, i * in_el_size));
     let in_scalars_1 =
-        (0 .. num_elements).map(|i| in_vector_1.slice((i + 1) * in_el_size - 1, i * in_el_size));
+        (0..num_elements).map(|i| in_vector_1.slice((i + 1) * in_el_size - 1, i * in_el_size));
     let out_scalars = in_scalars_0
         .zip_eq(in_scalars_1)
         .map(|(s0, s1)| op(&s0, &s1));

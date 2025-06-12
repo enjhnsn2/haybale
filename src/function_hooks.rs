@@ -75,6 +75,10 @@ pub struct FunctionHooks<'p, B: Backend + 'p> {
     /// result in errors.
     inline_asm_hook: Option<FunctionHook<'p, B>>,
 
+    /// Hook (if any) to use for functions which are not intrinsics (but may be defined
+    /// in the LLVM IR) and not specifically hooked by name.
+    uc_hook: Option<FunctionHook<'p, B>>,
+
     /// Hook (if any) to use for functions which are neither defined in the LLVM
     /// IR nor specifically hooked by name.
     ///
@@ -148,6 +152,7 @@ impl<'p, B: Backend + 'p> FunctionHooks<'p, B> {
             cpp_demangled_hooks: HashMap::new(),
             rust_demangled_hooks: HashMap::new(),
             inline_asm_hook: None,
+            uc_hook: None,
             default_hook: None,
             cur_id: 0,
         }
@@ -244,6 +249,29 @@ impl<'p, B: Backend + 'p> FunctionHooks<'p, B> {
             },
         }
     }
+    /// Add a hook to be used if we want to override llvm-defined functions 
+    /// If another UC hook is added, it will replace any default hook which
+    /// was previously present.
+    ///
+    /// Returns `true` if a UC hook was previously present, or `false` if no
+    /// UC hook was present.
+    pub fn add_uc_hook<H>(&mut self, hook: &'p H) -> bool
+    where
+        H: Fn(&mut State<'p, B>, &'p dyn IsCall) -> Result<ReturnValue<B::BV>>,
+    {
+        match &mut self.uc_hook {
+            h @ Some(_) => {
+                *h = Some(FunctionHook::new(self.cur_id, hook));
+                self.cur_id += 1;
+                true
+            },
+            h @ None => {
+                *h = Some(FunctionHook::new(self.cur_id, hook));
+                self.cur_id += 1;
+                false
+            },
+        }
+    }
 
     /// Removes the function hook for the given function, which was added with
     /// `add()`. That function will no longer be hooked.
@@ -286,6 +314,10 @@ impl<'p, B: Backend + 'p> FunctionHooks<'p, B> {
         self.default_hook = None;
     }
 
+    pub fn remove_uc_hook(&mut self) {
+        self.uc_hook = None;
+    }
+
     /// Iterate over all function hooks, as (function name, hook) pairs.
     /// Function names may include both mangled and demangled names.
     pub(crate) fn get_all_hooks(&self) -> impl Iterator<Item = (&String, &FunctionHook<'p, B>)> {
@@ -326,6 +358,10 @@ impl<'p, B: Backend + 'p> FunctionHooks<'p, B> {
         self.default_hook.as_ref()
     }
 
+    pub(crate) fn get_uc_hook(&self) -> Option<&FunctionHook<'p, B>> {
+        self.uc_hook.as_ref()
+    }
+
     /// Determine whether there is an active hook for the given `funcname`
     pub fn is_hooked(&self, funcname: &str) -> bool {
         self.get_hook_for(funcname).is_some()
@@ -341,6 +377,10 @@ impl<'p, B: Backend + 'p> FunctionHooks<'p, B> {
     /// (See `add_default_hook()` for more info)
     pub fn has_default_hook(&self) -> bool {
         self.default_hook.is_some()
+    }
+
+    pub fn has_uc_hook(&self) -> bool {
+        self.uc_hook.is_some()
     }
 }
 
@@ -461,7 +501,10 @@ pub fn generic_stub_hook<B: Backend>(
             let width = state.size_in_bits(ty).ok_or_else(|| {
                 Error::OtherError("Call return type is an opaque named struct".into())
             })?;
-            assert_ne!(width, 0, "Call return type has size 0 bits but isn't void type"); // void type was handled above
+            assert_ne!(
+                width, 0,
+                "Call return type has size 0 bits but isn't void type"
+            ); // void type was handled above
             let bv = state.new_bv_with_name(Name::from("generic_stub_hook_retval"), width)?;
             Ok(ReturnValue::Return(bv))
         },
