@@ -282,7 +282,7 @@ impl<'p> Location<'p> {
 }
 
 impl<'p> From<Location<'p>> for LocationDescription<'p> {
-    fn from(loc: Location<'p>) -> LocationDescription {
+    fn from(loc: Location<'p>) -> LocationDescription<'p> {
         LocationDescription {
             modname: loc.module.name.clone(),
             funcname: loc.func.name.clone(),
