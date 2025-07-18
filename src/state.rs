@@ -190,7 +190,7 @@ impl<'p> PathEntry<'p> {
     ///
     /// The returned iterator may also be empty, for instance if no debuginfo is
     /// present.
-    fn get_all_source_locs(&self) -> impl Iterator<Item = &'p DebugLoc> {
+    pub fn get_all_source_locs(&self) -> impl Iterator<Item = &'p DebugLoc> {
         let num_instrs_to_skip = match self.0.instr {
             BBInstrIndex::Instr(instr) => instr,
             BBInstrIndex::Terminator => self.0.bb.instrs.len(),
