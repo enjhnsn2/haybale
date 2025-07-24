@@ -895,7 +895,7 @@ where
     /// Get the offset of the element (in bytes, as a `BV` of `result_bits` bits)
     ///
     /// If `base_type` is a `NamedStructType`, the struct should be defined in the `state`'s current module.
-    fn get_offset_recursive(
+    pub fn get_offset_recursive(
         state: &State<'p, B>,
         mut indices: impl Iterator<Item = &'p Operand>,
         base_type: &Type,
