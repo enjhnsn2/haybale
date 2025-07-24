@@ -2,7 +2,6 @@
 
 use crate::backend::Backend;
 use crate::error::Result;
-use crate::state::State;
 use crate::ExecutionManager;
 use std::rc::Rc;
 
