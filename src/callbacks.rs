@@ -3,6 +3,7 @@
 use crate::backend::Backend;
 use crate::error::Result;
 use crate::state::State;
+use crate::ExecutionManager;
 use std::rc::Rc;
 
 #[derive(Clone)]
@@ -13,7 +14,7 @@ pub struct Callbacks<'p, B: Backend> {
     /// If the callback returns an `Err`, `haybale` will propagate it accordingly.
     #[allow(clippy::type_complexity)]
     pub(crate) instruction_callbacks:
-        Vec<Rc<dyn Fn(&'p llvm_ir::Instruction, &State<B>) -> Result<()> + 'p>>,
+        Vec<Rc<dyn Fn(&'p llvm_ir::Instruction, &ExecutionManager<B>) -> Result<()> + 'p>>,
 
     /// `haybale` will call each of these functions before processing each
     /// LLVM terminator instruction.
@@ -21,7 +22,7 @@ pub struct Callbacks<'p, B: Backend> {
     /// If the callback returns an `Err`, `haybale` will propagate it accordingly.
     #[allow(clippy::type_complexity)]
     pub(crate) terminator_callbacks:
-        Vec<Rc<dyn Fn(&'p llvm_ir::Terminator, &State<B>) -> Result<()> + 'p>>,
+        Vec<Rc<dyn Fn(&'p llvm_ir::Terminator, &ExecutionManager<B>) -> Result<()> + 'p>>,
 }
 
 impl<'p, B: Backend> Callbacks<'p, B> {
@@ -35,7 +36,7 @@ impl<'p, B: Backend> Callbacks<'p, B> {
     /// If any callback returns an `Err`, `haybale` will propagate it accordingly.
     pub fn add_instruction_callback(
         &mut self,
-        cb: impl Fn(&'p llvm_ir::Instruction, &State<B>) -> Result<()> + 'p,
+        cb: impl Fn(&'p llvm_ir::Instruction, &ExecutionManager<B>) -> Result<()> + 'p,
     ) {
         self.instruction_callbacks.push(Rc::new(cb))
     }
@@ -50,7 +51,7 @@ impl<'p, B: Backend> Callbacks<'p, B> {
     /// If any callback returns an `Err`, `haybale` will propagate it accordingly.
     pub fn add_terminator_callback(
         &mut self,
-        cb: impl Fn(&'p llvm_ir::Terminator, &State<B>) -> Result<()> + 'p,
+        cb: impl Fn(&'p llvm_ir::Terminator, &ExecutionManager<B>) -> Result<()> + 'p,
     ) {
         self.terminator_callbacks.push(Rc::new(cb))
     }

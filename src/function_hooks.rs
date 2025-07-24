@@ -249,7 +249,7 @@ impl<'p, B: Backend + 'p> FunctionHooks<'p, B> {
             },
         }
     }
-    /// Add a hook to be used if we want to override llvm-defined functions 
+    /// Add a hook to be used if we want to override llvm-defined functions
     /// If another UC hook is added, it will replace any default hook which
     /// was previously present.
     ///

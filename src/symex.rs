@@ -265,7 +265,7 @@ where
                 self.state.record_path_entry(); // do this only on the first iteration
             }
             for callback in &self.state.config.callbacks.instruction_callbacks {
-                callback(inst, &self.state)?;
+                callback(inst, &self)?;
             }
             let result = if let Ok(binop) = inst.clone().try_into() {
                 self.symex_binop(&binop)
@@ -323,7 +323,7 @@ where
             self.state.record_path_entry();
         }
         for callback in &self.state.config.callbacks.terminator_callbacks {
-            callback(term, &self.state)?;
+            callback(term, &self)?;
         }
         match term {
             Terminator::Ret(ret) => self.symex_return(ret).map(Some),
