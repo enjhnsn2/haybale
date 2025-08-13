@@ -58,6 +58,7 @@ pub struct FunctionHooks<'p, B: Backend + 'p> {
     hooks: HashMap<String, FunctionHook<'p, B>>,
     cpp_demangled_hooks: HashMap<String, FunctionHook<'p, B>>,
     rust_demangled_hooks: HashMap<String, FunctionHook<'p, B>>,
+    cpp_notemplate_hooks: HashMap<String, FunctionHook<'p, B>>,
 
     /// Hook (if any) to use for calls to inline assembly.
     /// This one hook will handle all calls to any inline assembly, regardless of
@@ -151,6 +152,7 @@ impl<'p, B: Backend + 'p> FunctionHooks<'p, B> {
             hooks: HashMap::new(),
             cpp_demangled_hooks: HashMap::new(),
             rust_demangled_hooks: HashMap::new(),
+            cpp_notemplate_hooks: HashMap::new(),
             inline_asm_hook: None,
             uc_hook: None,
             default_hook: None,
@@ -180,6 +182,15 @@ impl<'p, B: Backend + 'p> FunctionHooks<'p, B> {
         self.cur_id += 1;
     }
 
+    pub fn add_cpp_notemplate<H>(&mut self, hooked_function: impl Into<String>, hook: &'p H)
+    where
+        H: Fn(&mut State<'p, B>, &'p dyn IsCall) -> Result<ReturnValue<B::BV>>,
+    {
+        self.cpp_notemplate_hooks
+            .insert(hooked_function.into(), FunctionHook::new(self.cur_id, hook));
+        self.cur_id += 1;
+    }
+
     /// Exactly like `add()`, but takes the (Rust) _demangled_ name of the function
     /// to hook, so you can use a function name like "module::function".
     pub fn add_rust_demangled<H>(&mut self, hooked_function: impl Into<String>, hook: &'p H)
@@ -190,6 +201,7 @@ impl<'p, B: Backend + 'p> FunctionHooks<'p, B> {
             .insert(hooked_function.into(), FunctionHook::new(self.cur_id, hook));
         self.cur_id += 1;
     }
+
 
     /// Add a hook to be used for calls to inline assembly.
     /// This one hook will handle all calls to any inline assembly, regardless of
@@ -286,6 +298,10 @@ impl<'p, B: Backend + 'p> FunctionHooks<'p, B> {
         self.cpp_demangled_hooks.remove(hooked_function);
     }
 
+    pub fn remove_cpp_notemplate(&mut self, hooked_function: &str) {
+        self.cpp_notemplate_hooks.remove(hooked_function);
+    }
+
     /// Removes the function hook for the given function, which was added with
     /// [`add_rust_demangled()`](struct.FunctionHooks.html#method.add_rust_demangled).
     /// That function will no longer be hooked.
@@ -324,6 +340,7 @@ impl<'p, B: Backend + 'p> FunctionHooks<'p, B> {
         self.hooks
             .iter()
             .chain(self.cpp_demangled_hooks.iter())
+            .chain(self.cpp_notemplate_hooks.iter())
             .chain(self.rust_demangled_hooks.iter())
     }
 
@@ -340,6 +357,9 @@ impl<'p, B: Backend + 'p> FunctionHooks<'p, B> {
             .or_else(|| {
                 demangling::try_cpp_demangle(funcname)
                     .and_then(|demangled| self.cpp_demangled_hooks.get(&demangled))
+            })
+            .or_else(|| {
+                self.cpp_notemplate_hooks.get(funcname)
             })
     }
 
