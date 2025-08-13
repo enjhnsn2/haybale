@@ -312,7 +312,10 @@ where
                     info!("Path is unsat");
                     return self.backtrack_and_continue();
                 },
-                Err(e) => return Err(e), // propagate any other errors
+                Err(e) => {
+                    info!("Path terminated from error: {:?}", e);
+                    return Err(e)
+                }, // propagate any other errors
             };
         }
         let term = &self.state.cur_loc.bb.term;
