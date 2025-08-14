@@ -354,12 +354,13 @@ impl<'p, B: Backend + 'p> FunctionHooks<'p, B> {
                 demangling::try_rust_demangle(funcname)
                     .and_then(|demangled| self.rust_demangled_hooks.get(&demangled))
             })
+            // .or_else(|| {
+            //     demangling::try_cpp_demangle(funcname)
+            //         .and_then(|demangled| self.cpp_demangled_hooks.get(&demangled))
+            // })
             .or_else(|| {
-                demangling::try_cpp_demangle(funcname)
-                    .and_then(|demangled| self.cpp_demangled_hooks.get(&demangled))
-            })
-            .or_else(|| {
-                self.cpp_notemplate_hooks.get(funcname)
+                demangling::try_cpp_demangle(funcname) 
+                    .and_then(|demangled| self.cpp_notemplate_hooks.get(&demangling::erase_templates(&demangled)))
             })
     }
 

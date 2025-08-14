@@ -80,6 +80,32 @@ pub(crate) fn cpp_demangle_or_id(funcname: &str) -> String {
     try_cpp_demangle(funcname).unwrap_or_else(|| funcname.to_owned())
 }
 
+/// Remove all template arguments from a cpp demangled name
+/// This function removes all angle brackets and their contents
+pub fn erase_templates(demangled: &str) -> String {
+    let mut result = String::new();
+    let mut bracket_depth = 0;
+
+    for ch in demangled.chars() {
+        match ch {
+            '<' => {
+                bracket_depth += 1;
+            }
+            '>' => {
+                bracket_depth -= 1;
+            }
+            _ => {
+                if bracket_depth == 0 {
+                    result.push(ch);
+                }
+                // If bracket_depth > 0, we're inside a template, so skip this character
+            }
+        }
+    }
+
+    result
+}
+
 /// Helper function to demangle function names with the Rust demangler.
 ///
 /// Returns `Some` if successfully demangled, or `None` if any error occurs
@@ -95,6 +121,7 @@ pub(crate) fn try_rust_demangle(funcname: &str) -> Option<String> {
 pub(crate) fn rust_demangle_or_id(funcname: &str) -> String {
     format!("{:#}", rustc_demangle::demangle(funcname))
 }
+
 
 #[cfg(test)]
 mod tests {
